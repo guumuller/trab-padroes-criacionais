@@ -1,4 +1,7 @@
 import { DataSource } from "typeorm";
+import { Categoria } from "./model/Categoria";
+import { Produto } from "./model/Produto";
+import { Usuario } from "./model/Usuario";
 
 export class DataSourceSingleton {
     private static instance: DataSource;
@@ -17,7 +20,7 @@ export class DataSourceSingleton {
                 database: "trab_padroes",
                 synchronize: true,
                 logging: true,
-                entities: [],
+                entities: [Categoria, Produto, Usuario],
                 subscribers: [],
                 migrations: [],
             });
