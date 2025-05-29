@@ -17,3 +17,7 @@
 #### - Evita problemas de conexões concorrentes ou não gerenciadas.
 
 #### - Centraliza a configuração e o acesso ao banco.
+
+# Conexão com banco de dados:
+
+<img width="650" height="450" alt="Captura de Tela 2025-05-28 às 23 01 03" src="https://github.com/user-attachments/assets/2262710d-08eb-445a-8728-b43e1dc31366" />
