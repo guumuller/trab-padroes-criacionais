@@ -35,3 +35,11 @@
 #### Jest: framework de testes utilizado para escrever e executar os testes unitários.
 
 #### ts-jest: integração entre Jest e TypeScript para suportar sintaxe moderna e tipagens.
+
+## Adapter
+
+## Motivação
+
+### - Permite adaptar objetos de entrada para entidades esperadas no domínio.
+
+### - Facilita a integração de diferentes formatos de dados sem alterar as entidades do domínio.
