@@ -11,8 +11,15 @@ import { DataSourceSingleton } from './database';
 import { usuarioRotas } from './routers/UsuarioRouter';
 import { produtoRotas } from './routers/ProdutoRouter';
 import { TokenMiddleware } from './middleware/TokenMiddleware';
+import cors from 'cors';
 
 const app = express();
+const corsOptions = {
+    origin: 'http://localhost:5173', // Permite requisições apenas deste domínio
+    methods: ['GET', 'POST'], // Métodos permitidos
+    allowedHeaders: ['Content-Type'], // Cabeçalhos permitidos
+    credentials: true, // Permite cookies e credenciais
+};
 app.use(express.json());
 
 const dataSource = DataSourceSingleton.getInstance();
@@ -36,6 +43,8 @@ const loginController = new LoginController(loginService);
 
 //Midleware TokenMiddleware
 const tokenMiddleware = new TokenMiddleware(loginService)
+
+app.use(cors(corsOptions));
 
 // Routes
 app.post('/api/login', loginController.realizarLogin);
