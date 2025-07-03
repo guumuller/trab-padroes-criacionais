@@ -11,6 +11,8 @@ import { DataSourceSingleton } from './database';
 import { usuarioRotas } from './routers/UsuarioRouter';
 import { produtoRotas } from './routers/ProdutoRouter';
 import { TokenMiddleware } from './middleware/TokenMiddleware';
+import { LoggingObserver } from './observer/LoggingObserver';
+import { NotificationObserver } from './observer/NotificationObserver';
 import cors from 'cors';
 
 const app = express();
@@ -30,6 +32,13 @@ dataSource.initialize()
 //Produto
 const produtoRepository = DataSourceSingleton.getInstance().getRepository(Produto);
 const produtoService = new ProdutoService(produtoRepository);
+
+// Configurando Observers para produtos (Observer Pattern)
+const loggingObserver = new LoggingObserver();
+const notificationObserver = new NotificationObserver();
+produtoService.attachObserver(loggingObserver);
+produtoService.attachObserver(notificationObserver);
+
 const produtoController = new ProdutoController(produtoService);
 
 //Usuario
