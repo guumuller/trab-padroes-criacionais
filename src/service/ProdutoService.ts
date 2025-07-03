@@ -2,30 +2,52 @@ import { Repository } from 'typeorm';
 import { Produto } from '../model/Produto';
 import { Categoria } from '../model/Categoria';
 import { DataSourceSingleton } from '../database';
+import { ValidationStrategy } from '../strategy/ValidationStrategy';
+import { ProdutoValidationStrategy } from '../strategy/ProdutoValidationStrategy';
+import { ProductSubject } from '../observer/ProductSubject';
 
 export class ProdutoService {
   private repository: Repository<Produto>;
+  private validationStrategy: ValidationStrategy;
+  private productSubject: ProductSubject;
 
   constructor(repository: Repository<Produto>) {
     this.repository = repository;
+    this.validationStrategy = new ProdutoValidationStrategy();
+    this.productSubject = new ProductSubject();
+  }
+
+  public setValidationStrategy(strategy: ValidationStrategy): void {
+    this.validationStrategy = strategy;
+  }
+
+  public attachObserver(observer: any): void {
+    this.productSubject.attach(observer);
   }
 
   async inserir(produto: Produto): Promise<Produto> {
-    if (!produto.nome || !produto.categoria || !produto.categoria.id || !produto.preco) {
-      throw { id: 400, msg: 'Faltam dados obrigatórios' };
+    // Usando Strategy Pattern para validação
+    const validation = this.validationStrategy.validate(produto);
+    if (!validation.isValid) {
+      throw { id: 400, msg: `Dados inválidos: ${validation.errors.join(', ')}` };
     }
   
     const categoriaRepo = DataSourceSingleton.getInstance().getRepository(Categoria);
   
-    const categoriaEncontrada = await categoriaRepo.findOneBy({ id: produto.categoria.id });
+    const categoriaEncontrada = await categoriaRepo.findOneBy({ id: produto.categoria!.id });
   
     if (!categoriaEncontrada) {
-      throw { id: 400, msg: `Categoria com id ${produto.categoria.id} não encontrada` };
+      throw { id: 400, msg: `Categoria com id ${produto.categoria!.id} não encontrada` };
     }
   
     produto.categoria = categoriaEncontrada;
   
-    return await this.repository.save(produto);
+    const produtoSalvo = await this.repository.save(produto);
+    
+    // Usando Observer Pattern para notificar sobre a criação
+    this.productSubject.notify(produtoSalvo, 'created');
+    
+    return produtoSalvo;
   }
   
 
@@ -38,15 +60,17 @@ export class ProdutoService {
   }
 
   async atualizar(id: number, produto: Produto): Promise<Produto> {
-    if (!produto.nome || !produto.categoria || !produto.categoria.id || !produto.preco) {
-      throw { id: 400, msg: 'Faltam dados obrigatórios' };
+    // Usando Strategy Pattern para validação
+    const validation = this.validationStrategy.validate(produto);
+    if (!validation.isValid) {
+      throw { id: 400, msg: `Dados inválidos: ${validation.errors.join(', ')}` };
     }
   
     const categoriaRepo = DataSourceSingleton.getInstance().getRepository(Categoria);
-    const categoriaEncontrada = await categoriaRepo.findOneBy({ id: produto.categoria.id });
+    const categoriaEncontrada = await categoriaRepo.findOneBy({ id: produto.categoria!.id });
   
     if (!categoriaEncontrada) {
-      throw { id: 400, msg: `Categoria com id ${produto.categoria.id} não encontrada` };
+      throw { id: 400, msg: `Categoria com id ${produto.categoria!.id} não encontrada` };
     }
   
     const produtoAlt = await this.repository.findOneBy({ id });
@@ -59,7 +83,12 @@ export class ProdutoService {
     produtoAlt.preco = produto.preco;
     produtoAlt.categoria = categoriaEncontrada;
   
-    return await this.repository.save(produtoAlt);
+    const produtoAtualizado = await this.repository.save(produtoAlt);
+    
+    // Usando Observer Pattern para notificar sobre a atualização
+    this.productSubject.notify(produtoAtualizado, 'updated');
+    
+    return produtoAtualizado;
   }
   
 
@@ -70,6 +99,10 @@ export class ProdutoService {
     }    
     else {
       await this.repository.remove(produtoDeletado);
+      
+      // Usando Observer Pattern para notificar sobre a remoção
+      this.productSubject.notify(produtoDeletado, 'deleted');
+      
       return produtoDeletado;
     }
   }
