@@ -358,10 +358,6 @@ npm install
 ```bash
 # Desenvolvimento
 npm run dev
-
-# Produção
-npm run build
-npm start
 ```
 
 ### 🧪 Executar Testes
